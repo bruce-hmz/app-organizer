@@ -47,7 +47,7 @@ jobs:
       run: |
         mkdir -p release
         VERSION_NAME=${{ steps.version.outputs.version_name }}
-        cp android/app/build/outputs/apk/debug/app-debug.apk release/应用整理工具-v${VERSION_NAME}.apk
+        cp android/app/build/outputs/apk/debug/app-debug.apk release/App-Organizer-v${VERSION_NAME}.apk
 
     - name: 🎉 上传 APK (Artifact)
       uses: actions/upload-artifact@v4

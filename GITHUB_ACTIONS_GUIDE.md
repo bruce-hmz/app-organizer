@@ -38,7 +38,7 @@ git add .
 git commit -m "Initial commit: Android 应用整理工具"
 
 # 连接到你的 GitHub 仓库（替换成你的用户名）
-git remote add origin https://github.com/你的用户名/app-organizer.git
+git remote add origin https://github.com/bruce-hmz/app-organizer.git
 
 # 推送到 GitHub
 git branch -M main
@@ -51,7 +51,7 @@ git push -u origin main
 
 1. **推送后立即触发**
    - 代码推送后，GitHub Actions 会自动开始构建
-   - 访问：`https://github.com/你的用户名/app-organizer/actions`
+   - 访问：`https://github.com/bruce-hmz/app-organizer/actions`
 
 2. **查看构建进度**
    ```

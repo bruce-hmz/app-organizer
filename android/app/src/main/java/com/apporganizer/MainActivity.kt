@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     
     private var allApps = listOf<AppInfo>()
     private var currentBrand = BrandStyle.XIAOMI
+    private var currentPreference = OrganizePreference.GENERAL
     private var detectedBrand = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         
         detectPhoneBrand()
         setupBrandSelector()
+        setupPreferenceSelector()
         setupOrganizeButton()
         loadInstalledApps()
     }
@@ -79,6 +81,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * 设置整理偏好选择器
+     */
+    private fun setupPreferenceSelector() {
+        val preferences = OrganizePreference.values().map { it.displayName }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, preferences)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        
+        binding.preferenceSpinner.adapter = adapter
+        binding.preferenceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                currentPreference = OrganizePreference.values()[position]
+                binding.preferenceDescText.text = currentPreference.description
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    /**
      * 设置整理按钮
      */
     private fun setupOrganizeButton() {
@@ -92,6 +113,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, OrganizeResultActivity::class.java)
             intent.putParcelableArrayListExtra("apps", ArrayList(allApps))
             intent.putExtra("brand", currentBrand.name)
+            intent.putExtra("preference", currentPreference.name)
             startActivity(intent)
         }
     }
@@ -156,6 +178,8 @@ class ActivityMainBinding private constructor(
     val toolbar: com.google.android.material.appbar.MaterialToolbar,
     val detectedBrandText: android.widget.TextView,
     val brandSpinner: android.widget.Spinner,
+    val preferenceSpinner: android.widget.Spinner,
+    val preferenceDescText: android.widget.TextView,
     val appCountText: android.widget.TextView,
     val organizeButton: com.google.android.material.button.MaterialButton,
     val progressBar: android.widget.ProgressBar
@@ -172,6 +196,8 @@ class ActivityMainBinding private constructor(
                 toolbar = root.findViewById(R.id.toolbar),
                 detectedBrandText = root.findViewById(R.id.detectedBrandText),
                 brandSpinner = root.findViewById(R.id.brandSpinner),
+                preferenceSpinner = root.findViewById(R.id.preferenceSpinner),
+                preferenceDescText = root.findViewById(R.id.preferenceDescText),
                 appCountText = root.findViewById(R.id.appCountText),
                 organizeButton = root.findViewById(R.id.organizeButton),
                 progressBar = root.findViewById(R.id.progressBar)

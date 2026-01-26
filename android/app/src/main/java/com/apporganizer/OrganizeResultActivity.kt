@@ -18,6 +18,7 @@ class OrganizeResultActivity : AppCompatActivity() {
     
     private var allApps = listOf<AppInfo>()
     private var organizedFolders = listOf<FolderInfo>()
+    private var preference = OrganizePreference.GENERAL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,8 +30,10 @@ class OrganizeResultActivity : AppCompatActivity() {
             finish()
         }
         
-        // 获取传入的应用数据
+        // 获取传入的数据
         val apps = intent.getParcelableArrayListExtra<AppInfo>("apps") ?: emptyList()
+        val prefName = intent.getStringExtra("preference") ?: OrganizePreference.GENERAL.name
+        preference = OrganizePreference.values().find { it.name == prefName } ?: OrganizePreference.GENERAL
         
         // 重新加载图标
         allApps = apps.map { app ->
@@ -45,6 +48,9 @@ class OrganizeResultActivity : AppCompatActivity() {
         // 组织应用到文件夹
         organizeAppsIntoFolders()
         
+        // 更新顶部提示信息
+        updateTipCard()
+        
         // 设置RecyclerView
         setupRecyclerView()
     }
@@ -54,11 +60,13 @@ class OrganizeResultActivity : AppCompatActivity() {
      */
     private fun organizeAppsIntoFolders() {
         val folderMap = mutableMapOf<AppCategory, MutableList<AppInfo>>()
+        val preferredCategories = preference.getPreferredCategories()
         
         // 按分类整理应用
         for (app in allApps) {
             for (category in app.categories) {
-                if (category != AppCategory.ALL && category != AppCategory.OTHER) {
+                // 只使用偏好中包含的分类
+                if (category in preferredCategories) {
                     folderMap.getOrPut(category) { mutableListOf() }.add(app)
                 }
             }
@@ -71,9 +79,19 @@ class OrganizeResultActivity : AppCompatActivity() {
             .map { (category, apps) ->
                 FolderInfo(
                     category = category,
-                    apps = apps.sortedBy { it.appName }
+                    apps = apps.distinctBy { it.packageName }.sortedBy { it.appName }
                 )
             }
+    }
+
+    /**
+     * 更新提示卡片
+     */
+    private fun updateTipCard() {
+        val totalApps = organizedFolders.sumOf { it.apps.size }
+        binding.tipTitle.text = "📊 整理方案：${preference.displayName}"
+        binding.tipContent.text = "建议创建 ${organizedFolders.size} 个文件夹，整理 $totalApps 个应用。" +
+                "\n\n💡 在桌面长按应用图标，拖动到另一个应用上可创建文件夹，然后继续添加其他应用。"
     }
 
     /**
@@ -197,6 +215,8 @@ class AppSimpleAdapter(
 class ActivityOrganizeResultBinding private constructor(
     val root: View,
     val toolbar: com.google.android.material.appbar.MaterialToolbar,
+    val tipTitle: TextView,
+    val tipContent: TextView,
     val categoriesRecyclerView: RecyclerView
 ) {
     companion object {
@@ -209,6 +229,8 @@ class ActivityOrganizeResultBinding private constructor(
             return ActivityOrganizeResultBinding(
                 root = root,
                 toolbar = root.findViewById(R.id.toolbar),
+                tipTitle = root.findViewById(R.id.tipTitle),
+                tipContent = root.findViewById(R.id.tipContent),
                 categoriesRecyclerView = root.findViewById(R.id.categoriesRecyclerView)
             )
         }

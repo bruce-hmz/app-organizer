@@ -133,18 +133,23 @@ object AppClassifier {
     }
     
     /**
-     * 判断是否为系统应用（需要隐藏的）
+     * 判断是否为系统核心应用（需要隐藏的）
      */
     fun isSystemApp(packageName: String): Boolean {
+        // 只过滤最核心的系统应用，其他都保留
         val systemPackages = listOf(
             "com.android.systemui",
             "com.android.settings",
-            "com.android.providers",
+            "com.android.providers.settings",
+            "com.android.providers.calendar",
+            "com.android.providers.contacts",
+            "com.android.providers.media",
+            "com.android.providers.telephony",
             "com.android.packageinstaller",
-            "com.google.android.gms",
-            "com.google.android.gsf",
-            "com.android.launcher"
+            "com.google.android.gms.policy",
+            "com.google.android.gsf"
         )
-        return systemPackages.any { packageName.startsWith(it) }
+        // 完全匹配才过滤
+        return systemPackages.contains(packageName)
     }
 }

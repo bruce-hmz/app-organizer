@@ -76,3 +76,39 @@ enum class BrandStyle(val displayName: String, val spanCount: Int, val useListLa
     VIVO("vivo", 4, false),
     IPHONE("iPhone", 3, false)
 }
+
+/**
+ * 整理偏好方案
+ */
+enum class OrganizePreference(val displayName: String, val description: String) {
+    GENERAL("常规方案", "按功能分类，适合大多数用户"),
+    WORK("工作优先", "突出办公、商务类应用"),
+    ENTERTAINMENT("娱乐优先", "突出影音、游戏、社交类应用"),
+    SIMPLE("极简方案", "只创建少量核心文件夹");
+    
+    /**
+     * 根据偏好过滤分类
+     */
+    fun getPreferredCategories(): List<AppCategory> {
+        return when (this) {
+            GENERAL -> listOf(
+                AppCategory.SOCIAL, AppCategory.OFFICE, AppCategory.ENTERTAINMENT,
+                AppCategory.MUSIC, AppCategory.SHOPPING, AppCategory.FINANCE,
+                AppCategory.TRAVEL, AppCategory.TOOLS, AppCategory.PHOTO,
+                AppCategory.GAME, AppCategory.EDUCATION, AppCategory.HEALTH, AppCategory.NEWS
+            )
+            WORK -> listOf(
+                AppCategory.OFFICE, AppCategory.FINANCE, AppCategory.TOOLS,
+                AppCategory.SOCIAL, AppCategory.NEWS, AppCategory.EDUCATION
+            )
+            ENTERTAINMENT -> listOf(
+                AppCategory.ENTERTAINMENT, AppCategory.MUSIC, AppCategory.GAME,
+                AppCategory.SOCIAL, AppCategory.PHOTO, AppCategory.SHOPPING
+            )
+            SIMPLE -> listOf(
+                AppCategory.SOCIAL, AppCategory.TOOLS, AppCategory.ENTERTAINMENT,
+                AppCategory.SHOPPING
+            )
+        }
+    }
+}

@@ -85,6 +85,50 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- 整理偏好卡片 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎯 整理偏好"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="12dp" />
+
+                    <Spinner
+                        android:id="@+id/preferenceSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:background="@android:drawable/btn_dropdown" />
+
+                    <TextView
+                        android:id="@+id/preferenceDescText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="按功能分类，适合大多数用户"
+                        android:textSize="12sp"
+                        android:textColor="@android:color/darker_gray"
+                        android:layout_marginTop="8dp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- 应用统计卡片 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

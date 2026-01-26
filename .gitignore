@@ -22,6 +22,7 @@ android/.gradle
 
 # 本地构建产物
 release/
+build_output/
 *.apk
 *.aab
 

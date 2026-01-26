@@ -2,18 +2,14 @@ package com.apporganizer
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.chip.Chip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,24 +17,47 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var appAdapter: AppAdapter
     
     private var allApps = listOf<AppInfo>()
-    private var filteredApps = listOf<AppInfo>()
-    
     private var currentBrand = BrandStyle.XIAOMI
-    private var currentCategory = AppCategory.ALL
-    private var searchQuery = ""
+    private var detectedBrand = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        detectPhoneBrand()
         setupBrandSelector()
-        setupCategoryChips()
-        setupSearchBar()
+        setupOrganizeButton()
         loadInstalledApps()
+    }
+
+    /**
+     * 检测手机品牌
+     */
+    private fun detectPhoneBrand() {
+        detectedBrand = Build.BRAND.uppercase()
+        val displayBrand = when {
+            detectedBrand.contains("XIAOMI") || detectedBrand.contains("REDMI") -> "小米"
+            detectedBrand.contains("HUAWEI") || detectedBrand.contains("HONOR") -> "华为"
+            detectedBrand.contains("OPPO") -> "OPPO"
+            detectedBrand.contains("VIVO") -> "vivo"
+            detectedBrand.contains("SAMSUNG") -> "三星"
+            else -> detectedBrand
+        }
+        
+        binding.detectedBrandText.text = "已检测: $displayBrand"
+        
+        // 自动选择对应品牌
+        val brandIndex = when {
+            detectedBrand.contains("XIAOMI") || detectedBrand.contains("REDMI") -> 0
+            detectedBrand.contains("HUAWEI") || detectedBrand.contains("HONOR") -> 1
+            detectedBrand.contains("OPPO") -> 2
+            detectedBrand.contains("VIVO") -> 3
+            else -> 4 // iPhone风格作为默认
+        }
+        binding.brandSpinner.setSelection(brandIndex)
     }
 
     /**
@@ -53,8 +72,6 @@ class MainActivity : AppCompatActivity() {
         binding.brandSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentBrand = BrandStyle.values()[position]
-                updateRecyclerViewLayout()
-                filterAndDisplayApps()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -62,58 +79,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 设置分类标签
+     * 设置整理按钮
      */
-    private fun setupCategoryChips() {
-        AppCategory.values().forEach { category ->
-            val chip = Chip(this).apply {
-                text = category.displayName
-                isCheckable = true
-                isChecked = (category == AppCategory.ALL)
-                
-                setOnClickListener {
-                    currentCategory = category
-                    filterAndDisplayApps()
-                }
+    private fun setupOrganizeButton() {
+        binding.organizeButton.setOnClickListener {
+            if (allApps.isEmpty()) {
+                Toast.makeText(this, "正在加载应用，请稍候...", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-            binding.categoryChipGroup.addView(chip)
-        }
-    }
-
-    /**
-     * 设置搜索栏
-     */
-    private fun setupSearchBar() {
-        binding.searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             
-            override fun afterTextChanged(s: Editable?) {
-                searchQuery = s.toString().trim().toLowerCase()
-                filterAndDisplayApps()
-            }
-        })
-    }
-
-    /**
-     * 更新RecyclerView布局
-     */
-    private fun updateRecyclerViewLayout() {
-        val useListLayout = currentBrand.useListLayout
-        
-        // 创建新适配器
-        appAdapter = AppAdapter(useListLayout) { appInfo ->
-            launchApp(appInfo)
+            // 跳转到整理结果页面
+            val intent = Intent(this, OrganizeResultActivity::class.java)
+            intent.putParcelableArrayListExtra("apps", ArrayList(allApps))
+            intent.putExtra("brand", currentBrand.name)
+            startActivity(intent)
         }
-        
-        // 设置布局管理器
-        binding.appsRecyclerView.layoutManager = if (useListLayout) {
-            LinearLayoutManager(this)
-        } else {
-            GridLayoutManager(this, currentBrand.spanCount)
-        }
-        
-        binding.appsRecyclerView.adapter = appAdapter
     }
 
     /**
@@ -121,7 +101,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun loadInstalledApps() {
         binding.progressBar.visibility = View.VISIBLE
-        binding.appsRecyclerView.visibility = View.GONE
+        binding.organizeButton.isEnabled = false
         
         lifecycleScope.launch {
             allApps = withContext(Dispatchers.IO) {
@@ -129,10 +109,8 @@ class MainActivity : AppCompatActivity() {
             }
             
             binding.progressBar.visibility = View.GONE
-            binding.appsRecyclerView.visibility = View.VISIBLE
-            
-            updateRecyclerViewLayout()
-            filterAndDisplayApps()
+            binding.organizeButton.isEnabled = true
+            binding.appCountText.text = allApps.size.toString()
         }
     }
 
@@ -168,56 +146,6 @@ class MainActivity : AppCompatActivity() {
         // 按应用名称排序
         return apps.sortedBy { it.appName }
     }
-
-    /**
-     * 过滤并显示应用
-     */
-    private fun filterAndDisplayApps() {
-        filteredApps = allApps.filter { app ->
-            // 分类过滤
-            val categoryMatch = if (currentCategory == AppCategory.ALL) {
-                true
-            } else {
-                app.categories.contains(currentCategory)
-            }
-            
-            // 搜索过滤
-            val searchMatch = if (searchQuery.isEmpty()) {
-                true
-            } else {
-                app.appName.toLowerCase().contains(searchQuery) ||
-                app.packageName.toLowerCase().contains(searchQuery)
-            }
-            
-            categoryMatch && searchMatch
-        }
-        
-        // 更新UI
-        if (filteredApps.isEmpty()) {
-            binding.appsRecyclerView.visibility = View.GONE
-            binding.emptyView.visibility = View.VISIBLE
-        } else {
-            binding.appsRecyclerView.visibility = View.VISIBLE
-            binding.emptyView.visibility = View.GONE
-            appAdapter.submitList(filteredApps)
-        }
-    }
-
-    /**
-     * 启动应用
-     */
-    private fun launchApp(appInfo: AppInfo) {
-        try {
-            val intent = packageManager.getLaunchIntentForPackage(appInfo.packageName)
-            if (intent != null) {
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "无法打开 ${appInfo.appName}", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
 }
 
 /**
@@ -226,12 +154,11 @@ class MainActivity : AppCompatActivity() {
 class ActivityMainBinding private constructor(
     val root: View,
     val toolbar: com.google.android.material.appbar.MaterialToolbar,
+    val detectedBrandText: android.widget.TextView,
     val brandSpinner: android.widget.Spinner,
-    val searchEditText: android.widget.EditText,
-    val categoryChipGroup: com.google.android.material.chip.ChipGroup,
-    val appsRecyclerView: androidx.recyclerview.widget.RecyclerView,
-    val progressBar: android.widget.ProgressBar,
-    val emptyView: android.widget.LinearLayout
+    val appCountText: android.widget.TextView,
+    val organizeButton: com.google.android.material.button.MaterialButton,
+    val progressBar: android.widget.ProgressBar
 ) {
     companion object {
         fun inflate(inflater: android.view.LayoutInflater): ActivityMainBinding {
@@ -243,13 +170,13 @@ class ActivityMainBinding private constructor(
             return ActivityMainBinding(
                 root = root,
                 toolbar = root.findViewById(R.id.toolbar),
+                detectedBrandText = root.findViewById(R.id.detectedBrandText),
                 brandSpinner = root.findViewById(R.id.brandSpinner),
-                searchEditText = root.findViewById(R.id.searchEditText),
-                categoryChipGroup = root.findViewById(R.id.categoryChipGroup),
-                appsRecyclerView = root.findViewById(R.id.appsRecyclerView),
-                progressBar = root.findViewById(R.id.progressBar),
-                emptyView = root.findViewById(R.id.emptyView)
+                appCountText = root.findViewById(R.id.appCountText),
+                organizeButton = root.findViewById(R.id.organizeButton),
+                progressBar = root.findViewById(R.id.progressBar)
             )
         }
     }
 }
+

@@ -1,6 +1,8 @@
 package com.apporganizer
 
 import android.graphics.drawable.Drawable
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * 应用信息数据类
@@ -8,24 +10,54 @@ import android.graphics.drawable.Drawable
 data class AppInfo(
     val packageName: String,
     val appName: String,
-    val icon: Drawable,
+    val icon: Drawable?,
     val categories: MutableList<AppCategory> = mutableListOf()
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        null, // icon需要重新加载
+        ArrayList<AppCategory>().apply {
+            val categoryNames = parcel.createStringArrayList() ?: emptyList()
+            addAll(categoryNames.map { AppCategory.fromString(it) })
+        }
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(packageName)
+        parcel.writeString(appName)
+        parcel.writeStringList(categories.map { it.name })
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<AppInfo> {
+        override fun createFromParcel(parcel: Parcel): AppInfo = AppInfo(parcel)
+        override fun newArray(size: Int): Array<AppInfo?> = arrayOfNulls(size)
+    }
+}
 
 /**
  * 应用分类枚举
  */
 enum class AppCategory(val displayName: String) {
     ALL("全部"),
-    SOCIAL("社交"),
-    WORK("办公"),
-    ENTERTAINMENT("娱乐"),
-    TOOLS("工具"),
-    SHOPPING("购物"),
-    FINANCE("金融"),
-    GAMES("游戏"),
-    SYSTEM("系统"),
-    OTHER("其他");
+    SOCIAL("社交通讯"),
+    WORK("办公商务"),
+    OFFICE("办公学习"),
+    ENTERTAINMENT("影音娱乐"),
+    TOOLS("实用工具"),
+    SHOPPING("购物支付"),
+    FINANCE("金融理财"),
+    EDUCATION("教育学习"),
+    TRAVEL("出行旅游"),
+    HEALTH("运动健康"),
+    NEWS("新闻资讯"),
+    PHOTO("拍照摄影"),
+    MUSIC("音乐视频"),
+    GAME("游戏娱乐"),
+    SYSTEM("系统工具"),
+    OTHER("其他应用");
 
     companion object {
         fun fromString(value: String): AppCategory {

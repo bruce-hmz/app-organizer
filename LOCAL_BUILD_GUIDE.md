@@ -2,14 +2,69 @@
 
 ## 📦 快速开始
 
-### 方法一：本地构建（推荐）
+### 方法零：Android Studio 打包（推荐新手）
 
-**适用场景**：没有 ADB，手动传输 APK 到手机
+**适用场景**：使用 Android Studio 进行开发，图形界面操作
+
+#### 1️⃣ 导入项目
+
+1. **打开 Android Studio**
+2. **选择 Open**（或 File → Open）
+3. **选择项目的 `android` 目录**
+   ```
+   C:\Users\EDY\CodeBuddy\20260126090212\android
+   ```
+4. **等待 Gradle 同步完成**（首次可能需要 3-10 分钟下载依赖）
+
+#### 2️⃣ 构建 Debug APK
+
+**图形界面方式（推荐）**：
+1. 菜单栏：**Build** → **Build Bundle(s) / APK(s)** → **Build APK(s)**
+2. 等待构建完成（右下角会显示进度）
+3. 构建成功后，点击弹出通知中的 **locate** 链接
+4. APK 文件位置：`android\app\build\outputs\apk\debug\app-debug.apk`
+
+**Gradle 面板方式**：
+1. 右侧打开 **Gradle** 面板（或 View → Tool Windows → Gradle）
+2. 展开：**app** → **Tasks** → **build**
+3. 双击 **assembleDebug** 开始构建
+4. 构建成功后，在 `app\build\outputs\apk\debug\` 目录找到 APK
+
+#### 3️⃣ 构建 Release APK（需要签名）
+
+1. 菜单栏：**Build** → **Generate Signed Bundle / APK**
+2. 选择 **APK** → Next
+3. 如果没有签名文件：
+   - 点击 **Create new...**
+   - 填写密钥库路径、密码、别名等信息
+   - 保存为 `app-organizer-key.jks`
+4. 选择构建类型：**release**
+5. 点击 **Finish** 开始构建
+
+#### 4️⃣ 直接在真机/模拟器上运行
+
+1. **连接手机**（USB 调试）或**启动模拟器**
+2. 点击工具栏的 **绿色运行按钮**（或 Shift+F10）
+3. 选择设备
+4. 自动构建并安装到设备
+
+#### 5️⃣ 查看构建日志
+
+- **Build 窗口**：View → Tool Windows → Build
+- **查看详细错误**：点击具体的错误行查看堆栈跟踪
+
+---
+
+### 方法一：命令行构建（快速）
+
+**适用场景**：命令行快速构建，没有 ADB，手动传输 APK 到手机
 
 ```batch
 # 双击运行
 build_local.bat
 ```
+
+> 💡 **对比**：Android Studio 图形界面更直观，批处理脚本更快速
 
 **步骤**：
 1. 运行脚本，等待构建完成（约 1-3 分钟）
@@ -19,7 +74,7 @@ build_local.bat
 
 ---
 
-### 方法二：USB 直接安装（最快）
+### 方法二：命令行 + USB 直接安装（最快）
 
 **适用场景**：手机通过 USB 连接电脑，已安装 ADB
 
@@ -49,6 +104,49 @@ build_and_install.bat
 # 双击运行，提供多种选项
 quick_test.bat
 ```
+
+---
+
+## 🎨 Android Studio 开发技巧
+
+### 实时预览布局
+
+1. 打开 XML 布局文件（如 `activity_main.xml`）
+2. 右上角切换到 **Split** 或 **Design** 模式
+3. 实时查看界面效果
+
+### 快捷键（Windows）
+
+| 操作 | 快捷键 |
+|------|--------|
+| 运行应用 | Shift+F10 |
+| 构建项目 | Ctrl+F9 |
+| 查找文件 | Ctrl+Shift+N |
+| 查找类 | Ctrl+N |
+| 全局搜索 | Ctrl+Shift+F |
+| 代码格式化 | Ctrl+Alt+L |
+| 优化导入 | Ctrl+Alt+O |
+
+### Logcat 调试
+
+1. **运行应用后**，底部打开 **Logcat** 面板
+2. **过滤日志**：在搜索框输入 `package:com.apporganizer`
+3. **查看崩溃信息**：搜索 `AndroidRuntime` 或 `FATAL`
+
+### 解决常见同步问题
+
+**Gradle 同步失败**：
+```
+File → Invalidate Caches / Restart → Invalidate and Restart
+```
+
+**依赖下载慢**：
+- 项目已配置阿里云镜像，正常情况下会自动使用
+- 检查网络连接
+
+**模拟器无法启动**：
+- Tools → AVD Manager → 创建新设备
+- 推荐：Pixel 5 + Android 11
 
 ---
 
@@ -203,27 +301,65 @@ gradlew.bat assembleDebug --stacktrace
 
 ## 📊 构建时间对比
 
-| 方式 | 构建时间 | 安装时间 | 总耗时 |
-|------|---------|---------|--------|
-| 本地 + 手动传输 | 1-2分钟 | 10-30秒 | ~2-3分钟 |
-| ADB 直接安装 | 1-2分钟 | 5-10秒 | ~1-2分钟 |
-| GitHub CI/CD | 3-5分钟 | 下载30秒 | ~4-6分钟 |
+| 方式 | 构建时间 | 安装时间 | 总耗时 | 适用场景 |
+|------|---------|---------|--------|---------|
+| Android Studio 构建 | 1-2分钟 | - | ~1-2分钟 | 开发调试，实时预览 |
+| Android Studio 直接运行 | 1-2分钟 | 5-10秒 | ~1-2分钟 | 快速迭代测试 |
+| 命令行 + 手动传输 | 1-2分钟 | 10-30秒 | ~2-3分钟 | 无 USB 连接 |
+| ADB 直接安装 | 1-2分钟 | 5-10秒 | ~1-2分钟 | 自动化测试 |
+| GitHub CI/CD | 3-5分钟 | 下载30秒 | ~4-6分钟 | 正式发布 |
 
-**结论**：本地构建测试最快，适合频繁迭代开发！
+**结论**：
+- **开发阶段**：Android Studio 直接运行（最方便）
+- **快速测试**：命令行脚本（最快速）
+- **正式发布**：GitHub CI/CD（最可靠）
 
 ---
 
 ## 💡 最佳实践
 
-1. **小改动**：本地测试 → 直接提交
-2. **大功能**：本地多次测试 → 确认无误 → 提交
-3. **发布版本**：本地测试 + GitHub Actions 双重保障
-4. **使用 USB 安装**：最快的开发迭代方式
+### 针对不同场景
+
+1. **首次开发/学习**：
+   - 使用 Android Studio 导入项目
+   - 熟悉图形界面操作
+   - 利用代码提示和错误检查
+
+2. **日常开发**：
+   - Android Studio 直接运行到真机/模拟器
+   - 修改代码 → Shift+F10 → 立即查看效果
+   - 使用 Logcat 调试
+
+3. **快速验证**：
+   - 小改动：命令行脚本快速打包
+   - 大功能：Android Studio 完整测试
+
+4. **发布版本**：
+   - 本地测试确认无误
+   - 提交到 GitHub
+   - CI/CD 自动构建正式版
+
+### 推荐工作流
+
+```
+修改代码
+   ↓
+Android Studio 直接运行（Shift+F10）
+   ↓
+在真机/模拟器上测试
+   ↓
+功能正常？
+   ├─ 否 → 查看 Logcat 日志 → 修复 bug
+   └─ 是 → 提交到 GitHub
+```
 
 ---
 
 ## 🎯 一句话总结
 
-**本地构建：2分钟反馈 vs GitHub构建：5分钟反馈**
+- **新手推荐**：Android Studio 图形界面，直观易用 🎨
+- **开发推荐**：Android Studio 直接运行，即时反馈 ⚡
+- **快速打包**：命令行脚本，2分钟出包 🚀
+- **正式发布**：GitHub CI/CD，自动化部署 ✅
 
-**本地测试确认无误后再提交，开发效率翻倍！** 🚀
+**先用 Android Studio 熟悉项目，再用命令行提升效率！**

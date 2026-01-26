@@ -31,12 +31,17 @@ class OrganizeResultActivity : AppCompatActivity() {
         }
         
         // 获取传入的数据
-        val apps = intent.getParcelableArrayListExtra<AppInfo>("apps") ?: emptyList()
         val prefName = intent.getStringExtra("preference") ?: OrganizePreference.GENERAL.name
         preference = OrganizePreference.values().find { it.name == prefName } ?: OrganizePreference.GENERAL
         
+        // 直接使用全局应用列表
+        allApps = AppData.allApps
+        
+        // 打印应用数量日志
+        println("OrganizeResultActivity - 应用总数: ${allApps.size}")
+        
         // 重新加载图标
-        allApps = apps.map { app ->
+        allApps = allApps.map { app ->
             try {
                 val icon = packageManager.getApplicationIcon(app.packageName)
                 app.copy(icon = icon)
@@ -47,6 +52,13 @@ class OrganizeResultActivity : AppCompatActivity() {
         
         // 组织应用到文件夹
         organizeAppsIntoFolders()
+        
+        // 打印文件夹数量日志
+        println("OrganizeResultActivity - 文件夹数量: ${organizedFolders.size}")
+        println("OrganizeResultActivity - 每个文件夹的应用数量:")
+        organizedFolders.forEach { folder ->
+            println("${folder.category.displayName}: ${folder.apps.size}")
+        }
         
         // 更新顶部提示信息
         updateTipCard()
@@ -64,17 +76,24 @@ class OrganizeResultActivity : AppCompatActivity() {
         
         // 按分类整理应用
         for (app in allApps) {
+            var addedToAnyFolder = false
+            
             for (category in app.categories) {
                 // 只使用偏好中包含的分类
                 if (category in preferredCategories) {
                     folderMap.getOrPut(category) { mutableListOf() }.add(app)
+                    addedToAnyFolder = true
                 }
+            }
+            
+            // 如果应用没有被任何偏好分类包含，添加到OTHER
+            if (!addedToAnyFolder) {
+                folderMap.getOrPut(AppCategory.OTHER) { mutableListOf() }.add(app)
             }
         }
         
         // 转换为FolderInfo列表
         organizedFolders = folderMap.entries
-            .filter { it.value.size >= 2 } // 只显示有2个以上应用的文件夹
             .sortedByDescending { it.value.size }
             .map { (category, apps) ->
                 FolderInfo(
@@ -236,3 +255,5 @@ class ActivityOrganizeResultBinding private constructor(
         }
     }
 }
+
+

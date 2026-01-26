@@ -17,22 +17,58 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    
-    private var allApps = listOf<AppInfo>()
+    private var detectedBrand = ""
     private var currentBrand = BrandStyle.XIAOMI
     private var currentPreference = OrganizePreference.GENERAL
-    private var detectedBrand = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        // 设置返回按钮
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
+        
+        // 检测手机品牌
         detectPhoneBrand()
+        
+        // 设置品牌选择器
         setupBrandSelector()
+        
+        // 设置整理偏好选择器
         setupPreferenceSelector()
+        
+        // 设置整理按钮
         setupOrganizeButton()
+        
+        // 加载已安装的应用
         loadInstalledApps()
+    }
+
+    /**
+     * 加载已安装的应用
+     */
+    private fun loadInstalledApps() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.organizeButton.isEnabled = false
+        
+        lifecycleScope.launch {
+            AppData.allApps = withContext(Dispatchers.IO) {
+                val apps = getInstalledApps()
+                // 打印应用数量日志
+                println("MainActivity - 加载的应用数量: ${apps.size}")
+                apps
+            }
+            
+            binding.progressBar.visibility = View.GONE
+            binding.organizeButton.isEnabled = true
+            binding.appCountText.text = AppData.allApps.size.toString()
+            
+            // 打印应用列表日志
+            println("MainActivity - AppData.allApps 大小: ${AppData.allApps.size}")
+        }
     }
 
     /**
@@ -103,36 +139,17 @@ class MainActivity : AppCompatActivity() {
      * 设置整理按钮
      */
     private fun setupOrganizeButton() {
-        binding.organizeButton.setOnClickListener {
-            if (allApps.isEmpty()) {
+        binding.organizeButton.setOnClickListener { 
+            if (AppData.allApps.isEmpty()) {
                 Toast.makeText(this, "正在加载应用，请稍候...", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             
             // 跳转到整理结果页面
             val intent = Intent(this, OrganizeResultActivity::class.java)
-            intent.putParcelableArrayListExtra("apps", ArrayList(allApps))
             intent.putExtra("brand", currentBrand.name)
             intent.putExtra("preference", currentPreference.name)
             startActivity(intent)
-        }
-    }
-
-    /**
-     * 加载已安装的应用
-     */
-    private fun loadInstalledApps() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.organizeButton.isEnabled = false
-        
-        lifecycleScope.launch {
-            allApps = withContext(Dispatchers.IO) {
-                getInstalledApps()
-            }
-            
-            binding.progressBar.visibility = View.GONE
-            binding.organizeButton.isEnabled = true
-            binding.appCountText.text = allApps.size.toString()
         }
     }
 
@@ -143,7 +160,17 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val apps = mutableListOf<AppInfo>()
         
-        val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        // 使用更宽松的标志获取应用，确保获取所有已安装的应用
+        val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getInstalledApplications(
+                PackageManager.ApplicationInfoFlags.of(
+                    0L // 不使用任何标志，获取所有应用
+                )
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            pm.getInstalledApplications(0) // 不使用任何标志，获取所有应用
+        }
         
         for (appInfo in installedApps) {
             // 过滤掉系统核心应用
@@ -205,4 +232,10 @@ class ActivityMainBinding private constructor(
         }
     }
 }
+
+
+
+
+
+
 

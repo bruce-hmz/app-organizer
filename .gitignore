@@ -11,7 +11,7 @@ android/.cxx
 
 # Gradle 缓存
 android/.gradle
-android/gradle-wrapper.jar
+# android/gradle-wrapper.jar  # 需要提交这个文件用于 CI/CD
 
 # IDE 文件
 .idea/

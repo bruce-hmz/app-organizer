@@ -3,6 +3,8 @@ name: 构建 Android APK
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'  # 推送 tag 时触发
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:  # 允许手动触发
@@ -35,7 +37,7 @@ jobs:
         mkdir -p release
         cp android/app/build/outputs/apk/debug/app-debug.apk release/应用整理工具-debug.apk
 
-    - name: 🎉 上传 APK
+    - name: 🎉 上传 APK (Artifact)
       uses: actions/upload-artifact@v4
       with:
         name: 应用整理工具-APK
@@ -47,3 +49,36 @@ jobs:
         echo "APK 构建成功！"
         ls -lh release/
         echo "文件大小: $(du -h release/应用整理工具-debug.apk | cut -f1)"
+
+    - name: 🚀 发布到 Release (仅主分支)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: latest
+        name: 最新版本 (自动构建)
+        body: |
+          ## 📱 应用整理工具 - 最新版本
+          
+          **构建时间**: ${{ github.event.head_commit.timestamp }}
+          **提交信息**: ${{ github.event.head_commit.message }}
+          **提交者**: ${{ github.event.head_commit.author.name }}
+          
+          ### 📦 安装方法
+          1. 下载下方的 APK 文件
+          2. 传输到手机
+          3. 点击安装（可能需要允许"未知来源"）
+          4. 打开应用，授予"查询所有应用"权限
+          
+          ### ✨ 功能特性
+          - 🔍 实时搜索手机应用
+          - 📁 智能分类整理 (社交/办公/娱乐/工具等)
+          - 🎨 5种品牌UI风格 (小米/华为/OPPO/vivo/iPhone)
+          - 📱 一键打开应用
+          
+          ### 🔄 更新日志
+          ${{ github.event.head_commit.message }}
+        files: release/应用整理工具-debug.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

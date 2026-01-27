@@ -1,12 +1,17 @@
 package com.apporganizer
 
-import android.content.pm.PackageManager
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +33,11 @@ class OrganizeResultActivity : AppCompatActivity() {
         // 设置返回按钮
         binding.toolbar.setNavigationOnClickListener {
             finish()
+        }
+        
+        // 设置执行整理按钮
+        binding.executeButton.setOnClickListener {
+            checkAccessibilityPermissionAndExecute()
         }
         
         // 获取传入的数据
@@ -111,6 +121,109 @@ class OrganizeResultActivity : AppCompatActivity() {
         binding.tipTitle.text = "📊 整理方案：${preference.displayName}"
         binding.tipContent.text = "建议创建 ${organizedFolders.size} 个文件夹，整理 $totalApps 个应用。" +
                 "\n\n💡 在桌面长按应用图标，拖动到另一个应用上可创建文件夹，然后继续添加其他应用。"
+    }
+
+    /**
+     * 检查辅助功能权限并执行整理
+     */
+    private fun checkAccessibilityPermissionAndExecute() {
+        if (isAccessibilityServiceEnabled()) {
+            // 权限已授予，执行整理
+            executeOrganization()
+        } else {
+            // 权限未授予，引导用户开启
+            showAccessibilityPermissionDialog()
+        }
+    }
+
+    /**
+     * 检查辅助功能服务是否已启用
+     */
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val serviceName = "${packageName}/.AppOrganizerAccessibilityService"
+        val enabledServices = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
+        return enabledServices?.contains(serviceName) == true
+    }
+
+    /**
+     * 显示辅助功能权限请求对话框
+     */
+    private fun showAccessibilityPermissionDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("需要辅助功能权限")
+            .setMessage("为了自动创建文件夹并整理应用，需要开启辅助功能服务。\n\n" +
+                    "开启后，应用将能够模拟拖动操作来创建文件夹和移动应用。")
+            .setPositiveButton("去设置") { _, _ ->
+                openAccessibilitySettings()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    /**
+     * 打开辅助功能设置页面
+     */
+    private fun openAccessibilitySettings() {
+        try {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "无法打开设置页面", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 执行整理操作
+     */
+    private fun executeOrganization() {
+        // 将整理方案传递给Accessibility Service
+        val intent = Intent(this, AppOrganizerAccessibilityService::class.java)
+        intent.action = AppOrganizerAccessibilityService.ACTION_ORGANIZE_APPS
+        
+        // 将文件夹信息转换为可序列化的格式
+        val foldersData = ArrayList<Bundle>()
+        for (folder in organizedFolders) {
+            val folderBundle = Bundle()
+            folderBundle.putString("category", folder.category.name)
+            
+            val appPackages = ArrayList<String>()
+            for (app in folder.apps) {
+                appPackages.add(app.packageName)
+            }
+            folderBundle.putStringArrayList("apps", appPackages)
+            
+            foldersData.add(folderBundle)
+        }
+        
+        intent.putParcelableArrayListExtra("folders", foldersData)
+        
+        // 启动服务
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        
+        Toast.makeText(this, "开始自动整理，请保持屏幕开启", Toast.LENGTH_LONG).show()
+        
+        // 显示进度对话框
+        showProgressDialog()
+    }
+
+    /**
+     * 显示进度对话框
+     */
+    private fun showProgressDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("正在整理...")
+            .setMessage("应用正在自动创建文件夹并移动应用，请保持屏幕开启。\n\n" +
+                    "完成后会自动关闭此对话框。")
+            .setCancelable(false)
+            .setPositiveButton("完成", null)
+            .show()
     }
 
     /**
@@ -236,7 +349,8 @@ class ActivityOrganizeResultBinding private constructor(
     val toolbar: com.google.android.material.appbar.MaterialToolbar,
     val tipTitle: TextView,
     val tipContent: TextView,
-    val categoriesRecyclerView: RecyclerView
+    val categoriesRecyclerView: RecyclerView,
+    val executeButton: com.google.android.material.button.MaterialButton
 ) {
     companion object {
         fun inflate(inflater: LayoutInflater): ActivityOrganizeResultBinding {
@@ -250,10 +364,9 @@ class ActivityOrganizeResultBinding private constructor(
                 toolbar = root.findViewById(R.id.toolbar),
                 tipTitle = root.findViewById(R.id.tipTitle),
                 tipContent = root.findViewById(R.id.tipContent),
-                categoriesRecyclerView = root.findViewById(R.id.categoriesRecyclerView)
+                categoriesRecyclerView = root.findViewById(R.id.categoriesRecyclerView),
+                executeButton = root.findViewById(R.id.executeButton)
             )
         }
     }
 }
-
-

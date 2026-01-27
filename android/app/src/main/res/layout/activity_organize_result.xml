@@ -66,6 +66,23 @@
         android:padding="16dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/tipCard"
+        app:layout_constraintBottom_toTopOf="@id/executeButton" />
+
+    <!-- 执行整理按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/executeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="开始自动整理"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        app:backgroundTint="#4CAF50"
+        app:cornerRadius="12dp"
+        app:icon="@android:drawable/ic_menu_sort_by_size"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -160,17 +160,32 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val apps = mutableListOf<AppInfo>()
         
-        // 使用更宽松的标志获取应用，确保获取所有已安装的应用
+        // 使用正确的标志获取应用，确保获取所有已安装的应用
         val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             pm.getInstalledApplications(
                 PackageManager.ApplicationInfoFlags.of(
-                    0L // 不使用任何标志，获取所有应用
+                    PackageManager.GET_META_DATA.toLong() or 
+                    PackageManager.GET_SHARED_LIBRARY_FILES.toLong() or
+                    PackageManager.GET_PACKAGE_INFO.toLong()
                 )
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            pm.getInstalledApplications(
+                PackageManager.GET_META_DATA or 
+                PackageManager.GET_SHARED_LIBRARY_FILES or
+                PackageManager.GET_PACKAGE_INFO
             )
         } else {
             @Suppress("DEPRECATION")
-            pm.getInstalledApplications(0) // 不使用任何标志，获取所有应用
+            pm.getInstalledApplications(
+                PackageManager.GET_META_DATA or 
+                PackageManager.GET_SHARED_LIBRARY_FILES or
+                PackageManager.GET_PACKAGE_INFO
+            )
         }
+        
+        // 打印获取到的应用总数
+        println("MainActivity - 获取到的应用总数: ${installedApps.size}")
         
         for (appInfo in installedApps) {
             // 过滤掉系统核心应用
@@ -188,9 +203,13 @@ class MainActivity : AppCompatActivity() {
                 
                 apps.add(AppInfo(packageName, appName, icon, categories))
             } catch (e: Exception) {
-                e.printStackTrace()
+                // 打印异常信息，但继续处理其他应用
+                println("MainActivity - 处理应用时出错: ${e.message}")
             }
         }
+        
+        // 打印过滤后的应用数量
+        println("MainActivity - 过滤后的应用数量: ${apps.size}")
         
         // 按应用名称排序
         return apps.sortedBy { it.appName }
@@ -232,6 +251,8 @@ class ActivityMainBinding private constructor(
         }
     }
 }
+
+
 
 
 

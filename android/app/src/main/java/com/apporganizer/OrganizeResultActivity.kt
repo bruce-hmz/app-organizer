@@ -340,33 +340,3 @@ class AppSimpleAdapter(
 
     override fun getItemCount() = apps.size
 }
-
-/**
- * ViewBinding 辅助类
- */
-class ActivityOrganizeResultBinding private constructor(
-    val root: View,
-    val toolbar: com.google.android.material.appbar.MaterialToolbar,
-    val tipTitle: TextView,
-    val tipContent: TextView,
-    val categoriesRecyclerView: RecyclerView,
-    val executeButton: com.google.android.material.button.MaterialButton
-) {
-    companion object {
-        fun inflate(inflater: LayoutInflater): ActivityOrganizeResultBinding {
-            val root = inflater.inflate(R.layout.activity_organize_result, null)
-            return bind(root)
-        }
-        
-        fun bind(root: View): ActivityOrganizeResultBinding {
-            return ActivityOrganizeResultBinding(
-                root = root,
-                toolbar = root.findViewById(R.id.toolbar),
-                tipTitle = root.findViewById(R.id.tipTitle),
-                tipContent = root.findViewById(R.id.tipContent),
-                categoriesRecyclerView = root.findViewById(R.id.categoriesRecyclerView),
-                executeButton = root.findViewById(R.id.executeButton)
-            )
-        }
-    }
-}

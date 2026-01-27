@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -68,7 +69,12 @@ class AppOrganizerAccessibilityService : AccessibilityService() {
                     }
                 }
                 ACTION_ORGANIZE_APPS -> {
-                    val foldersData = intent.getParcelableArrayListExtra<Bundle>("folders")
+                    val foldersData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableArrayListExtra("folders", Bundle::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableArrayListExtra("folders")
+                    }
                     if (foldersData != null) {
                         val folders = parseFoldersData(foldersData)
                         startOrganizing(folders)

@@ -216,42 +216,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-/**
- * ViewBinding 辅助类
- */
-class ActivityMainBinding private constructor(
-    val root: View,
-    val toolbar: com.google.android.material.appbar.MaterialToolbar,
-    val detectedBrandText: android.widget.TextView,
-    val brandSpinner: android.widget.Spinner,
-    val preferenceSpinner: android.widget.Spinner,
-    val preferenceDescText: android.widget.TextView,
-    val appCountText: android.widget.TextView,
-    val organizeButton: com.google.android.material.button.MaterialButton,
-    val progressBar: android.widget.ProgressBar
-) {
-    companion object {
-        fun inflate(inflater: android.view.LayoutInflater): ActivityMainBinding {
-            val root = inflater.inflate(R.layout.activity_main, null)
-            return bind(root)
-        }
-        
-        fun bind(root: View): ActivityMainBinding {
-            return ActivityMainBinding(
-                root = root,
-                toolbar = root.findViewById(R.id.toolbar),
-                detectedBrandText = root.findViewById(R.id.detectedBrandText),
-                brandSpinner = root.findViewById(R.id.brandSpinner),
-                preferenceSpinner = root.findViewById(R.id.preferenceSpinner),
-                preferenceDescText = root.findViewById(R.id.preferenceDescText),
-                appCountText = root.findViewById(R.id.appCountText),
-                organizeButton = root.findViewById(R.id.organizeButton),
-                progressBar = root.findViewById(R.id.progressBar)
-            )
-        }
-    }
-}
-
 
 
 

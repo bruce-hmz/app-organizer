@@ -166,22 +166,14 @@ class MainActivity : AppCompatActivity() {
             pm.getInstalledApplications(
                 PackageManager.ApplicationInfoFlags.of(
                     PackageManager.GET_META_DATA.toLong() or 
-                    PackageManager.GET_SHARED_LIBRARY_FILES.toLong() or
-                    PackageManager.GET_PACKAGE_INFO.toLong()
+                    PackageManager.GET_SHARED_LIBRARY_FILES.toLong()
                 )
-            )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            pm.getInstalledApplications(
-                PackageManager.GET_META_DATA or 
-                PackageManager.GET_SHARED_LIBRARY_FILES or
-                PackageManager.GET_PACKAGE_INFO
             )
         } else {
             @Suppress("DEPRECATION")
             pm.getInstalledApplications(
                 PackageManager.GET_META_DATA or 
-                PackageManager.GET_SHARED_LIBRARY_FILES or
-                PackageManager.GET_PACKAGE_INFO
+                PackageManager.GET_SHARED_LIBRARY_FILES
             )
         }
         

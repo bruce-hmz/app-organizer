@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.apporganizer.databinding.ActivityOrganizeResultBinding
-import com.apporganizer.R
 
 class OrganizeResultActivity : AppCompatActivity() {
 

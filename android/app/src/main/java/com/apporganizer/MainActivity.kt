@@ -166,14 +166,16 @@ class MainActivity : AppCompatActivity() {
             pm.getInstalledApplications(
                 PackageManager.ApplicationInfoFlags.of(
                     PackageManager.GET_META_DATA.toLong() or 
-                    PackageManager.GET_SHARED_LIBRARY_FILES.toLong()
+                    PackageManager.GET_SHARED_LIBRARY_FILES.toLong() or
+                    PackageManager.GET_UNINSTALLED_PACKAGES.toLong()
                 )
             )
         } else {
             @Suppress("DEPRECATION")
             pm.getInstalledApplications(
                 PackageManager.GET_META_DATA or 
-                PackageManager.GET_SHARED_LIBRARY_FILES
+                PackageManager.GET_SHARED_LIBRARY_FILES or
+                PackageManager.GET_UNINSTALLED_PACKAGES
             )
         }
         
@@ -191,13 +193,20 @@ class MainActivity : AppCompatActivity() {
                 val icon = pm.getApplicationIcon(appInfo)
                 val packageName = appInfo.packageName
                 
+                // 打印应用信息，帮助调试
+                println("MainActivity - 处理应用: $appName ($packageName)")
+                
                 // 自动分类
                 val categories = AppClassifier.classify(packageName, appName).toMutableList()
+                
+                // 打印分类结果
+                println("MainActivity - 分类结果: ${categories.joinToString { it.displayName }}")
                 
                 apps.add(AppInfo(packageName, appName, icon, categories))
             } catch (e: Exception) {
                 // 打印异常信息，但继续处理其他应用
                 println("MainActivity - 处理应用时出错: ${e.message}")
+                println("MainActivity - 出错的应用包名: ${appInfo.packageName}")
             }
         }
         

@@ -161,10 +161,10 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val apps = mutableListOf<AppInfo>()
         
-        // 使用正确的标志获取应用，确保获取所有已安装的应用
-        val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getInstalledApplications(
-                PackageManager.ApplicationInfoFlags.of(
+        // 使用 getInstalledPackages 获取应用列表，这在 Android 11+ 中更可靠
+        val installedPackages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getInstalledPackages(
+                PackageManager.PackageInfoFlags.of(
                     PackageManager.GET_META_DATA.toLong() or 
                     PackageManager.GET_SHARED_LIBRARY_FILES.toLong() or
                     PackageManager.GET_UNINSTALLED_PACKAGES.toLong()
@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             @Suppress("DEPRECATION")
-            pm.getInstalledApplications(
+            pm.getInstalledPackages(
                 PackageManager.GET_META_DATA or 
                 PackageManager.GET_SHARED_LIBRARY_FILES or
                 PackageManager.GET_UNINSTALLED_PACKAGES
@@ -180,11 +180,14 @@ class MainActivity : AppCompatActivity() {
         }
         
         // 打印获取到的应用总数
-        println("MainActivity - 获取到的应用总数: ${installedApps.size}")
+        println("MainActivity - 获取到的应用包数量: ${installedPackages.size}")
         
-        for (appInfo in installedApps) {
+        for (packageInfo in installedPackages) {
+            val appInfo = packageInfo.applicationInfo
+            
             // 过滤掉系统核心应用
             if (AppClassifier.isSystemApp(appInfo.packageName)) {
+                println("MainActivity - 跳过系统应用: ${appInfo.packageName}")
                 continue
             }
             
@@ -203,6 +206,7 @@ class MainActivity : AppCompatActivity() {
                 println("MainActivity - 分类结果: ${categories.joinToString { it.displayName }}")
                 
                 apps.add(AppInfo(packageName, appName, icon, categories))
+                println("MainActivity - 添加应用成功，当前总数: ${apps.size}")
             } catch (e: Exception) {
                 // 打印异常信息，但继续处理其他应用
                 println("MainActivity - 处理应用时出错: ${e.message}")

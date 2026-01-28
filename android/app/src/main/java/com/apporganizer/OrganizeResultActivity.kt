@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.apporganizer.databinding.ActivityOrganizeResultBinding
+import com.apporganizer.R
 
 class OrganizeResultActivity : AppCompatActivity() {
 
@@ -238,14 +239,6 @@ class OrganizeResultActivity : AppCompatActivity() {
         }
     }
 }
-
-/**
- * 文件夹信息
- */
-data class FolderInfo(
-    val category: AppCategory,
-    val apps: List<AppInfo>
-)
 
 /**
  * 分类文件夹适配器

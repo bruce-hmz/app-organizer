@@ -112,3 +112,11 @@ enum class OrganizePreference(val displayName: String, val description: String) 
         }
     }
 }
+
+/**
+ * 文件夹信息
+ */
+data class FolderInfo(
+    val category: AppCategory,
+    val apps: List<AppInfo>
+)
